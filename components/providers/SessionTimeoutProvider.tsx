@@ -36,15 +36,15 @@ export default function SessionTimeoutProvider({ children }: SessionTimeoutProvi
   
   const handleLogout = useCallback(async () => {
     try {
-      
       localStorage.setItem("session-logout-event", Date.now().toString());
-      
-      await signOut({ callbackUrl: "/login?reason=timeout" });
+      await signOut({ redirect: false });
     } catch (error) {
       console.error("Logout failed:", error);
-      router.push("/login?reason=timeout");
     }
-  }, [router]);
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/login?reason=timeout";
+  }, []);
 
   
   const handleKeepSessionActive = useCallback(async () => {

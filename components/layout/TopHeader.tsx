@@ -46,7 +46,14 @@ export default function TopHeader({ user }: TopHeaderProps) {
   const page = PAGE_TITLES[pageKey] || { title: "Dashboard", subtitle: "" };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/login" });
+    try {
+      await signOut({ redirect: false });
+    } catch (e) {
+      console.error("Signout error:", e);
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/login";
   };
 
   return (
