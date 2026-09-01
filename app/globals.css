@@ -1223,6 +1223,7 @@ a:hover { color: var(--primary); }
 @media (max-width: 991.98px) {
   .sidebar {
     transform: translateX(-100%);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
   }
 
   .sidebar.open {
@@ -1238,15 +1239,20 @@ a:hover { color: var(--primary); }
   }
 
   .page-content {
-    padding: 1rem;
+    padding: 0.875rem;
+  }
+
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
   }
 
   .search-input {
-    width: 200px;
+    width: 160px;
   }
 
   .search-input:focus {
-    width: 240px;
+    width: 200px;
   }
 }
 

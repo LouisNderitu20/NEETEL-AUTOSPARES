@@ -199,6 +199,11 @@ export default function Sidebar({ user }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   className={`sidebar-item ${isActive ? "active" : ""}`}
+                  onClick={() => {
+                    if (typeof window !== "undefined" && window.innerWidth < 992) {
+                      document.getElementById("sidebar")?.classList.remove("open");
+                    }
+                  }}
                 >
                   <i className={`bi ${item.icon}`}></i>
                   <span>{item.label}</span>
