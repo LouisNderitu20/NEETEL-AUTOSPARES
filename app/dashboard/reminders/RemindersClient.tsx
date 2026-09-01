@@ -144,7 +144,6 @@ export default function RemindersClient({ initialReminders, customers }: Reminde
 
   return (
     <div className="animate-fade-up">
-      {/* Top Header */}
       <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
         <div>
           <h2 className="h5 fw-bold mb-0">Service & Maintenance Reminders</h2>
@@ -157,7 +156,6 @@ export default function RemindersClient({ initialReminders, customers }: Reminde
         </button>
       </div>
 
-      {/* Summary Stat Cards */}
       <div className="row g-3 mb-4">
         {statCards.map((card, i) => (
           <div key={i} className={`col-6 col-lg-3 animate-fade-up delay-${i + 1}`}>
@@ -172,7 +170,6 @@ export default function RemindersClient({ initialReminders, customers }: Reminde
         ))}
       </div>
 
-      {/* Main Table Card & Search/Filters */}
       <div className="card">
         <div className="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
           <div className="search-wrapper">
@@ -345,7 +342,6 @@ export default function RemindersClient({ initialReminders, customers }: Reminde
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
           <div className="modal-dialog modal-dialog-centered">
