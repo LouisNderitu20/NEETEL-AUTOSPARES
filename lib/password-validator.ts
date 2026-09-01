@@ -14,7 +14,6 @@ const COMMON_WEAK_PASSWORDS = new Set([
   "letmein",
   "welcome",
   "welcome123",
-  "person@2026",
   "owner@2026",
   "manager@2026",
   "receptionist@2026",
@@ -50,12 +49,12 @@ export function validateStrongPassword(
 
   const clean = password.trim();
 
-  
+
   if (clean.length < 8) {
     return { isValid: false, error: "Password must be at least 8 characters long." };
   }
 
-  
+
   const lower = clean.toLowerCase();
   if (COMMON_WEAK_PASSWORDS.has(lower)) {
     return {
@@ -64,7 +63,7 @@ export function validateStrongPassword(
     };
   }
 
-  
+
   if (/^[a-zA-Z]+@202[0-9]$/i.test(clean) || /^password@/i.test(clean)) {
     return {
       isValid: false,
@@ -72,7 +71,7 @@ export function validateStrongPassword(
     };
   }
 
-  
+
   const hasUpper = /[A-Z]/.test(clean);
   const hasLower = /[a-z]/.test(clean);
   const hasNumber = /[0-9]/.test(clean);
