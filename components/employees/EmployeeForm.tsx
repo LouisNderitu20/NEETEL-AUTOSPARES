@@ -58,6 +58,9 @@ export default function EmployeeForm({ initialData, currentUserRole }: EmployeeF
       if (isEdit && (!data.password || data.password.trim() === "")) {
         delete data.password;
       }
+      if (isEdit && !isOwner) {
+        delete (data as any).role;
+      }
 
       const response = await fetch(url, {
         method,
