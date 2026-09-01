@@ -44,7 +44,7 @@ export default async function EmployeesPage() {
                 <tr key={e.id}>
                   <td>
                     <div className="d-flex align-items-center gap-2">
-                      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>
+                      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, color: "#fff", flexShrink: 0, aspectRatio: "1 / 1" }}>
                         {e.name.charAt(0)}
                       </div>
                       <div className="fw-semibold" style={{ fontSize: "0.875rem" }}>{e.name}</div>

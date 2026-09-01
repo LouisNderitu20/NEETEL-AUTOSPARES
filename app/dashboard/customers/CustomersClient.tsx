@@ -128,6 +128,7 @@ export default function CustomersClient({ initialCustomers, canDelete }: Custome
                             fontWeight: 700,
                             color: "#fff",
                             flexShrink: 0,
+                            aspectRatio: "1 / 1",
                           }}
                         >
                           {customer.name.charAt(0).toUpperCase()}

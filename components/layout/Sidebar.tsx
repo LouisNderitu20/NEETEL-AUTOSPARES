@@ -261,6 +261,7 @@ export default function Sidebar({ user }: SidebarProps) {
               fontWeight: 700,
               color: "#fff",
               flexShrink: 0,
+              aspectRatio: "1 / 1",
             }}
           >
             {user.name.charAt(0).toUpperCase()}
