@@ -1,0 +1,570 @@
+
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+enum UserRole {
+  IT_ADMIN
+  OWNER
+  MANAGER
+  RECEPTIONIST
+  MECHANIC
+  CASHIER
+  INVENTORY_CLERK
+}
+
+enum JobStatus {
+  PENDING
+  AWAITING_APPROVAL
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  BILLED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  PARTIAL
+  DEPOSIT
+  CREDIT
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  RECEIVED
+  CANCELLED
+}
+
+enum StockMovementType {
+  PURCHASE       
+  SALE           
+  JOB_USAGE      
+  ADJUSTMENT     
+  RETURN         
+  TRANSFER       
+}
+
+enum QuotationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum ActivityAction {
+  LOGIN
+  LOGOUT
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  APPROVE
+  REJECT
+  PAYMENT
+  REFUND
+  STOCK_IN
+  STOCK_OUT
+  STOCK_ADJUST
+  JOB_ASSIGNED
+  JOB_STARTED
+  JOB_COMPLETED
+  JOB_BILLED
+}
+
+
+
+model GarageSettings {
+  id             String   @id @default(cuid())
+  garageName     String   @default("NEETEL AUTOSPARES")
+  logo           String?  
+  address        String?
+  phone          String?
+  email          String?
+  website        String?
+  currency       String   @default("USD")
+  currencySymbol String   @default("$")
+  taxRate        Float    @default(0)      
+  taxName        String   @default("Tax")
+  receiptFooter  String?
+  businessHours  Json?    
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          UserRole  @default(RECEPTIONIST)
+  phone         String?
+  avatar        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  
+  assignedJobs       JobCard[]       @relation("MechanicJobs")
+  createdJobs        JobCard[]       @relation("CreatedByJobs")
+  activityLogs       ActivityLog[]
+  stockMovements     StockMovement[]
+  receivedPOs        PurchaseOrder[] @relation("ReceivedBy")
+  createdPOs         PurchaseOrder[] @relation("CreatedBy")
+  sessionLogs        SessionLog[]
+
+  @@map("users")
+}
+
+
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String
+  phone2      String?
+  address     String?
+  company     String?
+  idNumber    String?   
+  notes       String?
+  creditLimit Float     @default(0)
+  creditBalance Float   @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  vehicles    Vehicle[]
+  jobCards    JobCard[]
+  invoices    Invoice[]
+  quotations  Quotation[]
+
+  @@map("customers")
+}
+
+
+
+model Vehicle {
+  id             String    @id @default(cuid())
+  customerId     String
+  make           String
+  model          String
+  year           Int?
+  color          String?
+  licensePlate   String    @unique
+  vin            String?   @unique
+  engineType     String?
+  fuelType       String?
+  transmission   String?   
+  mileage        Int?      
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  jobCards       JobCard[]
+
+  @@index([customerId])
+  @@map("vehicles")
+}
+
+
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String
+  address     String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products        Product[]
+  purchaseOrders  PurchaseOrder[]
+
+  @@map("suppliers")
+}
+
+
+
+model Product {
+  id              String    @id @default(cuid())
+  sku             String    @unique   
+  name            String
+  description     String?
+  categoryId      String
+  supplierId      String?
+  brand           String?
+  unit            String    @default("pcs") 
+  purchasePrice   Float
+  sellingPrice    Float
+  quantity        Int       @default(0)
+  minStockLevel   Int       @default(5)
+  location        String?   
+  imageUrl        String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  category        Category  @relation(fields: [categoryId], references: [id])
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  stockMovements  StockMovement[]
+  jobCardItems    JobCardItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  invoiceItems    InvoiceItem[]
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([quantity])
+  @@map("products")
+}
+
+
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  productId   String
+  type        StockMovementType
+  quantity    Int               
+  balanceBefore Int
+  balanceAfter  Int
+  reference   String?           
+  notes       String?
+  userId      String
+  createdAt   DateTime          @default(now())
+
+  product     Product   @relation(fields: [productId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  defaultRate Float     
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  jobCardServices JobCardService[]
+  invoiceItems    InvoiceItem[]
+
+  @@map("services")
+}
+
+
+
+model JobCard {
+  id              String      @id @default(cuid())
+  jobNumber       String      @unique  
+  customerId      String
+  vehicleId       String
+  mechanicId      String?
+  createdById     String
+  status          JobStatus   @default(PENDING)
+  complaint       String      
+  diagnosis       String?     
+  notes           String?
+  recommendations String?
+  laborHours      Float?      @default(0)
+  laborRate       Float?      @default(0)
+  scheduledDate   DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  approvedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  vehicle         Vehicle     @relation(fields: [vehicleId], references: [id])
+  mechanic        User?       @relation("MechanicJobs", fields: [mechanicId], references: [id])
+  createdBy       User        @relation("CreatedByJobs", fields: [createdById], references: [id])
+
+  inspection      Inspection?
+  items           JobCardItem[]     
+  services        JobCardService[]  
+  quotation       Quotation?
+  invoice         Invoice?
+
+  @@index([status])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([mechanicId])
+  @@index([createdAt])
+  @@map("job_cards")
+}
+
+
+
+model Inspection {
+  id                String    @id @default(cuid())
+  jobCardId         String    @unique
+  mileage           Int?
+  fuelLevel         String?   
+  exteriorDamage    String?   
+  warningLights     String[]  
+  visibleFaults     String?
+  customerBelongings String?  
+  additionalFindings String?
+  inspectedAt       DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  jobCard           JobCard   @relation(fields: [jobCardId], references: [id])
+
+  @@map("inspections")
+}
+
+
+
+model JobCardItem {
+  id          String    @id @default(cuid())
+  jobCardId   String
+  productId   String
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  jobCard     JobCard   @relation(fields: [jobCardId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@map("job_card_items")
+}
+
+
+
+model JobCardService {
+  id          String    @id @default(cuid())
+  jobCardId   String
+  serviceId   String
+  hours       Float     @default(1)
+  rate        Float
+  totalPrice  Float
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  jobCard     JobCard   @relation(fields: [jobCardId], references: [id])
+  service     Service   @relation(fields: [serviceId], references: [id])
+
+  @@map("job_card_services")
+}
+
+
+
+model Quotation {
+  id            String          @id @default(cuid())
+  quoteNumber   String          @unique   
+  jobCardId     String          @unique
+  customerId    String
+  status        QuotationStatus @default(PENDING)
+  subtotal      Float
+  taxAmount     Float           @default(0)
+  discountAmount Float          @default(0)
+  total         Float
+  notes         String?
+  validUntil    DateTime?
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  jobCard       JobCard         @relation(fields: [jobCardId], references: [id])
+  customer      Customer        @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([jobCardId])
+  @@index([status])
+  @@map("quotations")
+}
+
+
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique   
+  jobCardId       String?       @unique
+  customerId      String
+  subtotal        Float
+  taxAmount       Float         @default(0)
+  discountAmount  Float         @default(0)
+  total           Float
+  paymentStatus   PaymentStatus @default(PENDING)
+  amountPaid      Float         @default(0)
+  balance         Float         @default(0)
+  notes           String?
+  dueDate         DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  jobCard         JobCard?      @relation(fields: [jobCardId], references: [id])
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  items           InvoiceItem[]
+  payments        Payment[]
+
+  @@index([paymentStatus])
+  @@index([customerId])
+  @@index([jobCardId])
+  @@index([createdAt])
+  @@map("invoices")
+}
+
+
+
+model InvoiceItem {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  productId   String?
+  serviceId   String?
+  description String
+  quantity    Float
+  unitPrice   Float
+  totalPrice  Float
+  createdAt   DateTime  @default(now())
+
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  product     Product?  @relation(fields: [productId], references: [id])
+  service     Service?  @relation(fields: [serviceId], references: [id])
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+
+
+model Payment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  method        PaymentMethod
+  amount        Float
+  reference     String?       
+  notes         String?
+  processedAt   DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@index([processedAt])
+
+  @@map("payments")
+}
+
+
+
+model PurchaseOrder {
+  id            String              @id @default(cuid())
+  poNumber      String              @unique   
+  supplierId    String
+  status        PurchaseOrderStatus @default(DRAFT)
+  subtotal      Float               @default(0)
+  taxAmount     Float               @default(0)
+  total         Float               @default(0)
+  notes         String?
+  expectedDate  DateTime?
+  receivedAt    DateTime?
+  createdById   String
+  receivedById  String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  supplier      Supplier            @relation(fields: [supplierId], references: [id])
+  createdBy     User                @relation("CreatedBy", fields: [createdById], references: [id])
+  receivedBy    User?               @relation("ReceivedBy", fields: [receivedById], references: [id])
+  items         PurchaseOrderItem[]
+
+  @@map("purchase_orders")
+}
+
+
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantityOrdered Int
+  quantityReceived Int          @default(0)
+  unitCost        Float
+  totalCost       Float
+  createdAt       DateTime      @default(now())
+
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  product         Product       @relation(fields: [productId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+
+
+model ActivityLog {
+  id          String          @id @default(cuid())
+  userId      String
+  action      ActivityAction
+  module      String          
+  description String
+  referenceId String?         
+  metadata    Json?           
+  ipAddress   String?
+  createdAt   DateTime        @default(now())
+
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}
+
+
+
+model SessionLog {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loginAt   DateTime  @default(now())
+  logoutAt  DateTime?
+  ipAddress String?
+  userAgent String?
+
+  @@map("session_logs")
+}
