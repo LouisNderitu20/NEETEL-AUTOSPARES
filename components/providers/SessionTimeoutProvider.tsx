@@ -37,6 +37,7 @@ export default function SessionTimeoutProvider({ children }: SessionTimeoutProvi
   const handleLogout = useCallback(async () => {
     try {
       localStorage.setItem("session-logout-event", Date.now().toString());
+      await fetch("/api/auth/logout", { method: "POST" });
       await signOut({ redirect: false });
     } catch (error) {
       console.error("Logout failed:", error);

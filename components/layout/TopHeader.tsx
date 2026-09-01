@@ -47,6 +47,7 @@ export default function TopHeader({ user }: TopHeaderProps) {
 
   const handleSignOut = async () => {
     try {
+      await fetch("/api/auth/logout", { method: "POST" });
       await signOut({ redirect: false });
     } catch (e) {
       console.error("Signout error:", e);
