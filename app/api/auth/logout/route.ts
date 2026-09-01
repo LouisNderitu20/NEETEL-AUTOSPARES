@@ -27,7 +27,7 @@ export async function POST() {
           path: "/",
         });
       } catch (e) {
-        // ignore individual cookie clear errors
+
       }
     }
 
