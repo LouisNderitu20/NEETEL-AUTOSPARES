@@ -57,6 +57,12 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Quotations",
         roles: ["IT_ADMIN", "OWNER", "MANAGER", "RECEPTIONIST", "CASHIER"] as UserRole[],
       },
+      {
+        href: "/dashboard/reminders",
+        icon: "bi-alarm-fill",
+        label: "Service Reminders",
+        roles: ["IT_ADMIN", "OWNER", "MANAGER", "RECEPTIONIST", "CASHIER"] as UserRole[],
+      },
     ],
   },
   {

@@ -160,6 +160,7 @@ model Customer {
   jobCards    JobCard[]
   invoices    Invoice[]
   quotations  Quotation[]
+  reminders   ServiceReminder[]
 
   @@map("customers")
 }
@@ -185,6 +186,7 @@ model Vehicle {
 
   customer       Customer  @relation(fields: [customerId], references: [id])
   jobCards       JobCard[]
+  reminders      ServiceReminder[]
 
   @@index([customerId])
   @@map("vehicles")
@@ -567,4 +569,36 @@ model SessionLog {
   userAgent String?
 
   @@map("session_logs")
+}
+
+enum ReminderStatus {
+  DUE_SOON
+  OVERDUE
+  SENT
+  SERVICED
+  CANCELLED
+}
+
+model ServiceReminder {
+  id               String          @id @default(cuid())
+  customerId       String
+  vehicleId        String
+  serviceType      String          
+  dueDate          DateTime
+  dueMileage       Int?
+  lastServicedDate DateTime?
+  status           ReminderStatus  @default(DUE_SOON)
+  notes            String?
+  sentAt           DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  customer         Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vehicle          Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@map("service_reminders")
 }

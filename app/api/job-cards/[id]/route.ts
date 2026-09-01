@@ -87,6 +87,29 @@ export async function PUT(
     
     if (status === "COMPLETED" && existingJob.status !== "COMPLETED") {
       updateData.completedAt = new Date();
+
+      try {
+        const vehicle = await prisma.vehicle.findUnique({ where: { id: existingJob.vehicleId } });
+        const dueDate = new Date();
+        dueDate.setMonth(dueDate.getMonth() + 3);
+
+        const dueMileage = vehicle?.mileage ? vehicle.mileage + 5000 : null;
+
+        await prisma.serviceReminder.create({
+          data: {
+            customerId: existingJob.customerId,
+            vehicleId: existingJob.vehicleId,
+            serviceType: "Scheduled 3-Month Maintenance & Inspection",
+            dueDate,
+            dueMileage,
+            lastServicedDate: new Date(),
+            notes: `Auto-generated from completed Job Card #${existingJob.jobNumber}`,
+            status: "DUE_SOON",
+          },
+        });
+      } catch (err) {
+        console.error("Auto service reminder generation error:", err);
+      }
     }
 
     const updatedJob = await prisma.jobCard.update({

@@ -20,6 +20,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/customers": { title: "Customers", subtitle: "Customer records and history" },
   "/dashboard/vehicles": { title: "Vehicles", subtitle: "Registered vehicles" },
   "/dashboard/quotations": { title: "Quotations", subtitle: "Estimates and quotes" },
+  "/dashboard/reminders": { title: "Service Reminders", subtitle: "Automated maintenance schedules" },
   "/dashboard/pos": { title: "Point of Sale", subtitle: "Process sales and billing" },
   "/dashboard/invoices": { title: "Invoices", subtitle: "All billing records" },
   "/dashboard/payments": { title: "Payments", subtitle: "Payment transactions" },
