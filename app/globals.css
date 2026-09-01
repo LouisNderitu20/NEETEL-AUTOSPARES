@@ -1219,11 +1219,33 @@ a:hover { color: var(--primary); }
 .bg-card { background-color: var(--bg-card) !important; }
 .rounded-custom { border-radius: var(--radius-md) !important; }
 
+/* ─── MOBILE BACKDROP OVERLAY ────────────────────────────────────────── */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
 @media (max-width: 991.98px) {
   .sidebar {
     transform: translateX(-100%);
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+    z-index: 1000;
   }
 
   .sidebar.open {
@@ -1239,7 +1261,7 @@ a:hover { color: var(--primary); }
   }
 
   .page-content {
-    padding: 0.875rem;
+    padding: 0.75rem;
   }
 
   .table-responsive {

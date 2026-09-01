@@ -166,18 +166,40 @@ export default function Sidebar({ user }: SidebarProps) {
     items: section.items.filter((item) => item.roles.includes(user.role)),
   })).filter((section) => section.items.length > 0);
 
+  const closeSidebar = () => {
+    if (typeof window !== "undefined") {
+      document.getElementById("sidebar")?.classList.remove("open");
+      document.getElementById("sidebar-backdrop")?.classList.remove("show");
+    }
+  };
+
   return (
-    <aside className="sidebar" id="sidebar">
-      {}
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon" style={{ overflow: "hidden", background: "none" }}>
-          <img src="/logo.jpg" alt="NEETEL Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    <>
+      <div
+        className="sidebar-backdrop d-lg-none"
+        id="sidebar-backdrop"
+        onClick={closeSidebar}
+      />
+      <aside className="sidebar" id="sidebar">
+        <div className="sidebar-logo d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center gap-2">
+            <div className="sidebar-logo-icon" style={{ overflow: "hidden", background: "none" }}>
+              <img src="/logo.jpg" alt="NEETEL Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div>
+              <div className="sidebar-logo-text" style={{ letterSpacing: "1px", fontWeight: 800 }}>NEETEL</div>
+              <div className="sidebar-logo-sub" style={{ letterSpacing: "1.5px", fontSize: "0.62rem", color: "var(--primary-light)" }}>AUTOSPARES</div>
+            </div>
+          </div>
+          <button
+            className="btn btn-sm d-lg-none p-1 border-0"
+            style={{ color: "var(--text-secondary)" }}
+            onClick={closeSidebar}
+            aria-label="Close Navigation Menu"
+          >
+            <i className="bi bi-x-lg fs-5"></i>
+          </button>
         </div>
-        <div>
-          <div className="sidebar-logo-text" style={{ letterSpacing: "1px", fontWeight: 800 }}>NEETEL</div>
-          <div className="sidebar-logo-sub" style={{ letterSpacing: "1.5px", fontSize: "0.62rem", color: "var(--primary-light)" }}>AUTOSPARES</div>
-        </div>
-      </div>
 
       {}
       <nav className="sidebar-nav">
@@ -261,5 +283,6 @@ export default function Sidebar({ user }: SidebarProps) {
         </div>
       </div>
     </aside>
+  </>
   );
 }

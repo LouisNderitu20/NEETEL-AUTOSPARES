@@ -55,8 +55,8 @@ export default function TopHeader({ user }: TopHeaderProps) {
         className="btn btn-sm d-lg-none"
         style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-color)", color: "var(--text-secondary)" }}
         onClick={() => {
-          const sidebar = document.getElementById("sidebar");
-          sidebar?.classList.toggle("open");
+          document.getElementById("sidebar")?.classList.toggle("open");
+          document.getElementById("sidebar-backdrop")?.classList.toggle("show");
         }}
       >
         <i className="bi bi-list fs-5"></i>
