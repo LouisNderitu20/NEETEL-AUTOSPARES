@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    if (!session || !["OWNER", "MANAGER"].includes(session.user.role)) {
+    if (!session || !["OWNER", "MANAGER", "IT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -45,30 +45,26 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    if (!session || !["OWNER", "MANAGER"].includes(session.user.role)) {
+    if (!session || !["OWNER", "MANAGER", "IT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const { id } = await params;
     const { name, email, phone, role, password, isActive } = await req.json();
 
-    
     const targetUser = await prisma.user.findUnique({ where: { id } });
     if (!targetUser) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
 
-    
     if (targetUser.role === "IT_ADMIN" && session.user.role !== "IT_ADMIN") {
       return NextResponse.json({ error: "Security Policy Violation: IT Administrator accounts cannot be modified by Garage Owners or Managers." }, { status: 403 });
     }
 
-    
     if (targetUser.role === "OWNER" && !["OWNER", "IT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Security Policy Violation: Only Owners or IT Administrators can modify Owner accounts." }, { status: 403 });
     }
 
-    
     let finalRole = targetUser.role;
     if (role && role !== targetUser.role) {
       if (!["OWNER", "IT_ADMIN"].includes(session.user.role)) {
@@ -77,7 +73,7 @@ export async function PUT(
       if (role === "IT_ADMIN" && session.user.role !== "IT_ADMIN") {
         return NextResponse.json({ error: "Security Policy Violation: Only an IT Administrator can assign IT Admin privileges." }, { status: 403 });
       }
-      if (targetUser.role === "OWNER" && role !== "OWNER") {
+      if (targetUser.role === "OWNER" && role !== "OWNER" && session.user.role !== "IT_ADMIN") {
         const ownerCount = await prisma.user.count({ where: { role: "OWNER", isActive: true } });
         if (ownerCount <= 1) {
           return NextResponse.json({ error: "Cannot downgrade the sole remaining active Owner account in the system." }, { status: 400 });
@@ -86,13 +82,11 @@ export async function PUT(
       finalRole = role as UserRole;
     }
 
-    
     const requestedActiveState = typeof isActive === "boolean" ? isActive : targetUser.isActive;
     if (targetUser.id === session.user.id && !requestedActiveState) {
       return NextResponse.json({ error: "You cannot deactivate your own active session account." }, { status: 400 });
     }
 
-    
     const updateData: any = {
       name: name || targetUser.name,
       email: email || targetUser.email,
@@ -101,7 +95,6 @@ export async function PUT(
       isActive: requestedActiveState,
     };
 
-    
     if (password && password.trim() !== "") {
       if (session.user.role !== "IT_ADMIN" && session.user.id !== targetUser.id) {
         return NextResponse.json(
@@ -116,18 +109,18 @@ export async function PUT(
       updateData.password = await bcrypt.hash(password, 12);
     }
 
-    
     const updatedUser = await prisma.$transaction(async (tx) => {
       if (
         (targetUser.role === "OWNER" && targetUser.isActive && !requestedActiveState) ||
         (targetUser.role === "OWNER" && finalRole !== "OWNER")
       ) {
-        
-        const activeOwners = await tx.$queryRaw<Array<{ id: string }>>`
-          SELECT id FROM users WHERE role = 'OWNER'::"UserRole" AND "isActive" = true FOR UPDATE
-        `;
-        if (activeOwners.length <= 1) {
-          throw new Error("Cannot deactivate or downgrade the sole remaining active Owner account in the system.");
+        if (session.user.role !== "IT_ADMIN") {
+          const activeOwners = await tx.$queryRaw<Array<{ id: string }>>`
+            SELECT id FROM users WHERE role = 'OWNER'::"UserRole" AND "isActive" = true FOR UPDATE
+          `;
+          if (activeOwners.length <= 1) {
+            throw new Error("Cannot deactivate or downgrade the sole remaining active Owner account in the system.");
+          }
         }
       }
 
@@ -167,13 +160,11 @@ export async function DELETE(
 
     const { id } = await params;
 
-    
     const targetUser = await prisma.user.findUnique({ where: { id } });
     if (!targetUser) {
       return NextResponse.json({ error: "Employee not found." }, { status: 404 });
     }
 
-    
     if (targetUser.role === "IT_ADMIN" && session.user.role !== "IT_ADMIN") {
       return NextResponse.json({ error: "Security Policy Violation: IT Administrator accounts cannot be deleted by Garage Owners." }, { status: 403 });
     }
@@ -182,14 +173,13 @@ export async function DELETE(
       return NextResponse.json({ error: "You cannot delete your own logged-in account." }, { status: 400 });
     }
 
-    if (targetUser.role === "OWNER") {
+    if (targetUser.role === "OWNER" && session.user.role !== "IT_ADMIN") {
       const ownerCount = await prisma.user.count({ where: { role: "OWNER", isActive: true } });
       if (ownerCount <= 1) {
         return NextResponse.json({ error: "Cannot delete the sole remaining Owner account in the system." }, { status: 400 });
       }
     }
 
-    
     const [jobsCreated, jobsAssigned, stockMoved, POsCreated] = await Promise.all([
       prisma.jobCard.count({ where: { createdById: id } }),
       prisma.jobCard.count({ where: { mechanicId: id } }),
@@ -200,7 +190,6 @@ export async function DELETE(
     const hasLinkedRecords = jobsCreated > 0 || jobsAssigned > 0 || stockMoved > 0 || POsCreated > 0;
 
     if (hasLinkedRecords) {
-      
       await prisma.user.update({
         where: { id },
         data: { isActive: false },
@@ -211,7 +200,6 @@ export async function DELETE(
       });
     }
 
-    
     await prisma.user.delete({ where: { id } });
 
     return NextResponse.json({

@@ -9,8 +9,8 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== "OWNER") {
-      return NextResponse.json({ error: "Unauthorized. Only the owner can allocate roles." }, { status: 403 });
+    if (!session || !["OWNER", "IT_ADMIN"].includes(session.user.role)) {
+      return NextResponse.json({ error: "Unauthorized. Only the owner or IT Admin can allocate roles." }, { status: 403 });
     }
 
     const { id } = await params;
@@ -25,7 +25,7 @@ export async function PUT(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (targetUser.role === "OWNER" && role !== "OWNER") {
+    if (targetUser.role === "OWNER" && role !== "OWNER" && session.user.role !== "IT_ADMIN") {
       const ownerCount = await prisma.user.count({ where: { role: "OWNER", isActive: true } });
       if (ownerCount <= 1) {
         return NextResponse.json({ error: "Cannot downgrade the sole remaining Owner account." }, { status: 400 });

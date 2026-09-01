@@ -8,7 +8,7 @@ import { validateStrongPassword } from "@/lib/password-validator";
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session || !["OWNER", "MANAGER"].includes(session.user.role)) {
+    if (!session || !["OWNER", "MANAGER", "IT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
