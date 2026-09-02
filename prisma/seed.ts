@@ -10,10 +10,9 @@ function subDays(days: number): Date {
 }
 
 async function main() {
-  console.log("🚀 Starting comprehensive Kenyan garage database seeding...");
+  console.log("Starting comprehensive Kenyan garage database seeding...");
 
-  // 1. Clean existing records in reverse dependency order
-  console.log("🧹 Clearing old data...");
+  console.log("Clearing old data...");
   await prisma.activityLog.deleteMany({});
   await prisma.sessionLog.deleteMany({});
   await prisma.serviceReminder.deleteMany({});
@@ -37,8 +36,7 @@ async function main() {
   await prisma.user.deleteMany({});
   await prisma.garageSettings.deleteMany({});
 
-  // 2. Garage Settings
-  console.log("⚙️ Seeding Garage Settings...");
+  console.log("Seeding Garage Settings...");
   const settings = await prisma.garageSettings.create({
     data: {
       id: "default",
@@ -64,16 +62,18 @@ async function main() {
     },
   });
 
-  // 3. Users / Staff Members
-  console.log("👥 Seeding Staff Members (Kenyan Names)...");
-  const defaultPasswordHash = await bcrypt.hash("GaragePass2026!", 10);
-  const louisPasswordHash = await bcrypt.hash("LouisPass2026!", 10);
+  console.log("Seeding Staff Members (Kenyan Names)...");
+  const rawDefaultPassword = process.env.SEED_DEFAULT_PASSWORD || "GaragePass2026!";
+  const rawAdminPassword = process.env.INITIAL_ADMIN_PASSWORD || process.env.IT_ADMIN_PASSWORD || rawDefaultPassword;
+
+  const defaultPasswordHash = await bcrypt.hash(rawDefaultPassword, 10);
+  const adminPasswordHash = await bcrypt.hash(rawAdminPassword, 10);
 
   const itAdmin = await prisma.user.create({
     data: {
       name: "Louis Nderitu",
       email: "louisnderitu20@gmail.com",
-      password: louisPasswordHash,
+      password: adminPasswordHash,
       role: UserRole.IT_ADMIN,
       phone: "+254 787 570 236",
       isActive: true,
@@ -168,8 +168,7 @@ async function main() {
     },
   });
 
-  // 4. Categories
-  console.log("📦 Seeding Categories...");
+  console.log("Seeding Categories...");
   const categoriesData = [
     { name: "Engine Parts", description: "Pistons, gaskets, valves, timing belts, and internal engine components" },
     { name: "Tyres & Wheels", description: "Passenger vehicle, 4x4 SUV, and light commercial tyres and rims" },
@@ -188,8 +187,7 @@ async function main() {
     categories[cat.name] = await prisma.category.create({ data: cat });
   }
 
-  // 5. Suppliers
-  console.log("🏭 Seeding Suppliers...");
+  console.log("Seeding Suppliers...");
   const supplier1 = await prisma.supplier.create({
     data: {
       name: "Toyota Kenya (CFAO Motors)",
@@ -245,8 +243,7 @@ async function main() {
     },
   });
 
-  // 6. Products
-  console.log("🛒 Seeding Auto Spare Parts & Inventory...");
+  console.log("Seeding Auto Spare Parts & Inventory...");
   const productsData = [
     {
       sku: "BRK-AKE-TOY01",
@@ -451,8 +448,7 @@ async function main() {
     products[p.sku] = await prisma.product.create({ data: p });
   }
 
-  // 7. Services
-  console.log("🛠️ Seeding Garage Services...");
+  console.log("Seeding Garage Services...");
   const servicesData = [
     { name: "Minor Engine Service", defaultRate: 3500.0, description: "Oil change labor, filter replacements, fluid top-ups & safety inspection" },
     { name: "Major Vehicle Service", defaultRate: 9500.0, description: "Comprehensive service including spark plugs, air filter, fuel filter & multi-point check" },
@@ -471,8 +467,7 @@ async function main() {
     services[s.name] = await prisma.service.create({ data: s });
   }
 
-  // 8. Customers (Real Kenyan Names)
-  console.log("👤 Seeding Customers (Kenyan Individuals & Corporate Fleets)...");
+  console.log("Seeding Customers (Kenyan Individuals & Corporate Fleets)...");
   const customersData = [
     {
       name: "Josphat Kamau",
@@ -592,8 +587,7 @@ async function main() {
     customers[c.name] = await prisma.customer.create({ data: c });
   }
 
-  // 9. Vehicles (Authentic Kenyan License Plates)
-  console.log("🚘 Seeding Vehicles (Kenyan Reg Plates & Specs)...");
+  console.log("Seeding Vehicles (Kenyan Reg Plates & Specs)...");
   const vehiclesData = [
     {
       customerId: customers["Josphat Kamau"].id,
@@ -756,10 +750,8 @@ async function main() {
     vehicles[v.licensePlate] = await prisma.vehicle.create({ data: v });
   }
 
-  // 10. Job Cards & Inspections & Invoices & Payments
-  console.log("📋 Seeding Job Cards, Inspections, Invoices & M-PESA / Card Payments...");
+  console.log("Seeding Job Cards, Inspections, Invoices & M-PESA / Card Payments...");
 
-  // JOB 1: COMPLETED & PAID (Toyota Prado - Josphat Kamau)
   const job1Date = subDays(24);
   const job1 = await prisma.jobCard.create({
     data: {
@@ -839,7 +831,6 @@ async function main() {
     },
   });
 
-  // Calculate Invoice 1
   const subtotal1 = products["BRK-AKE-TOY01"].sellingPrice + (products["OIL-MOB-5W30"].sellingPrice * 2) + products["FLT-MAN-W712"].sellingPrice + services["Minor Engine Service"].defaultRate + services["Front & Rear Brake System Service"].defaultRate;
   const tax1 = Math.round(subtotal1 * 0.16);
   const total1 = subtotal1 + tax1;
@@ -905,7 +896,6 @@ async function main() {
     },
   });
 
-  // JOB 2: COMPLETED & PAID (Mercedes C200 - Dr. Agnes Njeri)
   const job2Date = subDays(18);
   const job2 = await prisma.jobCard.create({
     data: {
@@ -1033,7 +1023,6 @@ async function main() {
     },
   });
 
-  // JOB 3: IN_PROGRESS (Subaru Forester - Peter Omondi)
   const job3Date = subDays(2);
   const job3 = await prisma.jobCard.create({
     data: {
@@ -1101,7 +1090,6 @@ async function main() {
     },
   });
 
-  // Create Quotation for Job 3
   const subtotalQuote3 = products["SUS-KYB-3410"].sellingPrice + products["SPK-NGK-IRID"].sellingPrice + services["Suspension Bushing & Arm Overhaul"].defaultRate + services["4-Wheel Laser Alignment & Balancing"].defaultRate;
   const taxQuote3 = Math.round(subtotalQuote3 * 0.16);
   await prisma.quotation.create({
@@ -1122,7 +1110,6 @@ async function main() {
     },
   });
 
-  // JOB 4: APPROVED (Mazda CX-5 - Catherine Wambui)
   const job4Date = subDays(1);
   const job4 = await prisma.jobCard.create({
     data: {
@@ -1174,7 +1161,6 @@ async function main() {
     },
   });
 
-  // JOB 5: COMPLETED & BILLED - Fleet (Safari Tours Tour Van - Safari Tours Ltd)
   const job5Date = subDays(10);
   const job5 = await prisma.jobCard.create({
     data: {
@@ -1299,7 +1285,6 @@ async function main() {
     },
   });
 
-  // JOB 6: PENDING (Toyota Hilux - Captain Evans Korir)
   const job6Date = new Date();
   await prisma.jobCard.create({
     data: {
@@ -1329,10 +1314,8 @@ async function main() {
     },
   });
 
-  // 11. Direct Invoices (Counter Sales / POS Transactions)
-  console.log("💳 Seeding Direct POS Invoices & Receipts...");
+  console.log("Seeding Direct POS Invoices & Receipts...");
 
-  // Direct POS Sale 1 (David Maina)
   const pos1Subtotal = products["WIP-BOS-AER"].sellingPrice + products["OIL-MOB-5W30"].sellingPrice;
   const pos1Tax = Math.round(pos1Subtotal * 0.16);
   const pos1Total = pos1Subtotal + pos1Tax;
@@ -1383,7 +1366,6 @@ async function main() {
     },
   });
 
-  // Direct POS Sale 2 (Naomi Chebet - Battery purchase)
   const pos2Subtotal = products["BAT-CHL-65AH"].sellingPrice;
   const pos2Tax = Math.round(pos2Subtotal * 0.16);
   const pos2Total = pos2Subtotal + pos2Tax;
@@ -1427,8 +1409,7 @@ async function main() {
     },
   });
 
-  // 12. Purchase Orders
-  console.log("📝 Seeding Purchase Orders & Supplier Records...");
+  console.log("Seeding Purchase Orders & Supplier Records...");
   const po1 = await prisma.purchaseOrder.create({
     data: {
       poNumber: "PO-2026-001",
@@ -1492,8 +1473,7 @@ async function main() {
     },
   });
 
-  // 13. Service Reminders
-  console.log("⏰ Seeding Service Reminders...");
+  console.log("Seeding Service Reminders...");
   await prisma.serviceReminder.createMany({
     data: [
       {
@@ -1529,8 +1509,7 @@ async function main() {
     ],
   });
 
-  // 14. Stock Movements
-  console.log("📊 Seeding Stock Movement Logs...");
+  console.log("Seeding Stock Movement Logs...");
   await prisma.stockMovement.createMany({
     data: [
       {
@@ -1569,8 +1548,7 @@ async function main() {
     ],
   });
 
-  // 15. Activity Logs
-  console.log("📜 Seeding Recent System Activity Logs...");
+  console.log("Seeding Recent System Activity Logs...");
   await prisma.activityLog.createMany({
     data: [
       {
@@ -1616,24 +1594,24 @@ async function main() {
     ],
   });
 
-  console.log("✅ Seeding completed successfully!");
+  console.log("Seeding completed successfully!");
   console.log("-------------------------------------------------------");
-  console.log("📌 System Users Created:");
-  console.log("  • IT Admin:     louisnderitu20@gmail.com (Pass: LouisPass2026!)");
-  console.log("  • Owner:        owner@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Manager:      grace.wanjiru@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Receptionist: faith.muthoni@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Mechanic 1:   kevin.otieno@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Mechanic 2:   dennis.kiprop@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Mechanic 3:   brian.wafula@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Cashier:      mercy.akinyi@neetelautospares.com (Pass: GaragePass2026!)");
-  console.log("  • Inventory:    joseph.ochieng@neetelautospares.com (Pass: GaragePass2026!)");
+  console.log("System Users Created:");
+  console.log("  - IT Admin:     louisnderitu20@gmail.com (Pass: " + rawAdminPassword + ")");
+  console.log("  - Owner:        owner@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Manager:      grace.wanjiru@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Receptionist: faith.muthoni@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Mechanic 1:   kevin.otieno@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Mechanic 2:   dennis.kiprop@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Mechanic 3:   brian.wafula@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Cashier:      mercy.akinyi@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
+  console.log("  - Inventory:    joseph.ochieng@neetelautospares.com (Pass: " + rawDefaultPassword + ")");
   console.log("-------------------------------------------------------");
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Seed Error:", e);
+    console.error("Seed Error:", e);
     process.exit(1);
   })
   .finally(async () => {
