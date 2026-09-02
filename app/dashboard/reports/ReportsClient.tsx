@@ -230,22 +230,53 @@ export default function ReportsClient({
       ]);
     }
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.map((val: any) => `"${val}"`).join(","))].join("\n");
+    const csvRows = [
+      headers.join(","),
+      ...rows.map((row: any[]) =>
+        row
+          .map((val: any) => {
+            const str = String(val ?? "").replace(/"/g, '""');
+            return `"${str}"`;
+          })
+          .join(",")
+      ),
+    ];
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div>
-      {}
+      {/* Printable PDF Header */}
+      <div className="d-none d-print-block mb-4 pb-3 border-bottom text-dark">
+        <div className="d-flex justify-content-between align-items-start">
+          <div>
+            <h3 className="fw-bold mb-1" style={{ color: "#17181c" }}>NEETEL AUTOSPARES & GARAGE</h3>
+            <p className="small mb-0 text-secondary">Enterprise Road, Industrial Area, Nairobi, Kenya • Tel: +254 700 123 456</p>
+            <p className="small mb-0 text-secondary">Email: info@neetelautospares.co.ke • Web: www.neetelautospares.co.ke</p>
+          </div>
+          <div className="text-end">
+            <h5 className="fw-bold text-uppercase mb-1" style={{ color: "#c5a059" }}>
+              {activeTab === "sales" && "Financial & Sales Performance Report"}
+              {activeTab === "inventory" && "Inventory Valuation & Stock Movement Report"}
+              {activeTab === "jobs" && "Mechanic Workload & Productivity Report"}
+              {activeTab === "customers" && "Customer Accounts & Debt Statement"}
+            </h5>
+            <p className="small mb-0 text-muted"><strong>Period:</strong> {startDate} to {endDate}</p>
+            <p className="small mb-0 text-muted"><strong>Generated On:</strong> {new Date().toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter & Export Controls Bar */}
       <div className="card mb-4 print-hide">
         <div className="card-body d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
           <div className="d-flex align-items-center gap-3">
@@ -270,11 +301,11 @@ export default function ReportsClient({
           </div>
 
           <div className="d-flex gap-2">
-            <button onClick={handleExportCSV} className="btn btn-sm btn-outline-primary fw-semibold">
-              <i className="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+            <button onClick={handleExportCSV} className="btn btn-sm btn-outline-success fw-semibold">
+              <i className="bi bi-file-earmark-excel me-1"></i>Export Excel (.csv)
             </button>
             <button onClick={handlePrint} className="btn btn-sm btn-primary fw-semibold">
-              <i className="bi bi-printer me-1"></i>Print Report
+              <i className="bi bi-file-earmark-pdf me-1"></i>Export / Print PDF
             </button>
           </div>
         </div>
